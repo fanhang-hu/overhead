@@ -1,0 +1,32 @@
+============================================================
+Sysdig/CPS overhead monitor
+Mode: cps
+Duration: 300s
+Interval: 30s
+Output: ./cps.txt
+Sysdig PID: NA
+CPS PIDs: 1511 1512 1513
+SCAP path: NA
+Sysdig log: NA
+Start time: 2026-05-17 11:04:46
+============================================================
+
+sample   time                 sysCPU%      sysdigCPU%     cpsCPU_total%  sysdigRSS_MB   cpsRSS_total_MB diskWrite_MBps sysdigWrite_MBps scapGrowth_MBps  dropRate%        cpsLoopJitter   
+1        2026-05-17 11:05:16  1.699        NA             3.533          NA             19.570         0.000000       NA             NA               NA               NA              
+2        2026-05-17 11:05:47  2.051        NA             3.433          NA             19.570         0.000000       NA             NA               NA               NA              
+3        2026-05-17 11:06:17  2.575        NA             3.533          NA             19.570         0.000000       NA             NA               NA               NA              
+4        2026-05-17 11:06:47  1.737        NA             3.467          NA             19.570         0.000000       NA             NA               NA               NA              
+5        2026-05-17 11:07:17  1.550        NA             3.600          NA             19.570         0.000000       NA             NA               NA               NA              
+6        2026-05-17 11:07:47  1.655        NA             3.500          NA             19.570         0.000000       NA             NA               NA               NA              
+7        2026-05-17 11:08:17  2.221        NA             3.500          NA             19.570         0.000000       NA             NA               NA               NA              
+8        2026-05-17 11:08:47  1.859        NA             3.500          NA             19.570         0.000000       NA             NA               NA               NA              
+9        2026-05-17 11:09:17  2.319        NA             3.533          NA             19.570         0.000000       NA             NA               NA               NA              
+10       2026-05-17 11:09:48  1.947        NA             3.533          NA             19.570         0.000000       NA             NA               NA               NA              
+
+============================================================
+End time: 2026-05-17 11:09:48
+Saved to: ./cps.txt
+Note:
+  cpsLoopJitter=NA because CPS application timestamps are not available.
+  dropRate%=NA means the current sysdig/falco stack did not expose periodic drop counters.
+============================================================
