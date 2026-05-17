@@ -104,23 +104,28 @@ get_proc_write_bytes() {
 }
 
 get_system_cpu() {
-    awk '/^cpu / {
-        user=$2; nice=$3; system=$4; idle=$5; iowait=$6; irq=$7; softirq=$8; steal=$9;
-        idle_all=idle+iowait;
-        non_idle=user+nice+system+irq+softirq+steal;
-        total=idle_all+non_idle;
-        print total, idle_all
-    }' /proc/stat
+    local line user nice system idle iowait irq softirq steal
+    read -r line < /proc/stat
+    # 解析 "cpu  user nice system idle iowait irq softirq steal ..."
+    set -- $line
+    shift   # 去掉第一个字段 "cpu"
+    user=$1; nice=$2; system=$3; idle=$4; iowait=$5; irq=$6; softirq=$7; steal=$8
+    local idle_all=$((idle + iowait))
+    local non_idle=$((user + nice + system + irq + softirq + steal))
+    local total=$((idle_all + non_idle))
+    echo "$total $idle_all"
 }
 
 get_disk_write_sectors() {
-    # 统计主要块设备写入扇区数；field10 = sectors written
-    awk '
-    $3 ~ /^(sd[a-z]+|vd[a-z]+|xvd[a-z]+|nvme[0-9]+n[0-9]+|mmcblk[0-9]+)$/ {
-        sum += $10
-    }
-    END {print sum + 0}
-    ' /proc/diskstats
+    local sectors=0
+    while read -r _ _ _ name _ _ _ _ _ writes _; do
+        case "$name" in
+            sd*|vd*|xvd*|nvme*n*|mmcblk*)
+                sectors=$((sectors + writes))
+                ;;
+        esac
+    done < /proc/diskstats
+    echo "$sectors"
 }
 
 get_scap_size_bytes() {
@@ -320,7 +325,42 @@ echo "  cpsLoopJitter=NA because CPS application timestamps are not available."
 echo "  dropRate%=NA means the current sysdig/falco stack did not expose periodic drop counters."
 echo "============================================================"
 ```
-I use the following commands to test, first of all, we need to open three Terminals, Terminal A, B, and C,
+I use the following commands to test, first of all, we need to open three Terminals, Terminal A, B, and C, and we need to test Cyber-Physical System (raw) and Cyber-Physical System (using sysdig to monitor).
 
+**TEST 1, monitor CPS raw, we use baseline to be a example and we run 300s. In terminal A,**
+```bash
+./scripts/run_rpi_experiment.sh --mode baseline --duration-sec 320
+```
+After runing this CPS process, it will print three pids like,
+```bash
+[run_rpi_experiment] controller pid=1229
+[run_rpi_experiment] gateway pid=1230
+[run_rpi_experiment] sensor pid=1231
+```
+In terminal B,
+```bash
+# ./monitor_sysdig_overhead.sh cps 300 --cps-pid $(pidof your_cps_binary)
+./monitor_sysdig_overhead.sh cps 300 --cps-pid 1229 1230 1231
+```
+------
+**TEST 2, monitor CPS+Sysdig, we also use baseline to be a example and also run 300s. In terminal B**
+```bash
+sudo sysdig -w cps+sysdig.scap
+```
+In terminal A,
+```bash
+./scripts/run_rpi_experiment.sh --mode baseline --duration-sec 320
+```
+We also use the following bash print as an example,
+```bash
+[run_rpi_experiment] controller pid=1229
+[run_rpi_experiment] gateway pid=1230
+[run_rpi_experiment] sensor pid=1231
+```
+In terminal C,
+```bash
+./monitor_sysdig_overhead.sh cps+sysdig 300 --cps-pid 1229 1230 1231 --sysdig-pid $(pidof sysdig) --scap ./cps+sysdig.scap
+```
+Remamber that Terminal B and Terminal C are under the same dictory.
 
-
+Finally, we will get two txt, ```cps.txt``` and ```cps+sysdig.txt```
